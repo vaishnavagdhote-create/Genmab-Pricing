@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Oncology Launch Sequencing Dashboard</title>
+<style>
+:root{
+  --ink:#1a1d29;
+  --ink-soft:#5a6072;
+  --ink-faint:#8b91a3;
+  --paper:#f7f8fa;
+  --surface:#ffffff;
+  --line:#e4e7ee;
+  --line-soft:#eef0f5;
+  --accent:#1d4ed8;
+  --accent-soft:#eff4ff;
+  --t1:#5b4bc4; --t1-bg:#efedfb;
+  --t2:#0f8a6b; --t2-bg:#e3f6f0;
+  --t3:#b97316; --t3-bg:#fbeed8;
+  --t4:#c8492a; --t4-bg:#fbe9e3;
+  --danger:#c8392a; --danger-bg:#fceae7;
+  --warn:#b97316; --warn-bg:#fbeed8;
+  --ok:#0f8a6b; --ok-bg:#e3f6f0;
+  --radius:10px;
+  --radius-sm:7px;
+  --font:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  --mono:'SF Mono',ui-monospace,'Roboto Mono',Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --ink:#e8eaf0; --ink-soft:#a0a6b8; --ink-faint:#6b7184;
+    --paper:#0f1117; --surface:#171a23; --line:#2a2e3b; --line-soft:#21242f;
+    --accent:#5b8def; --accent-soft:#1a2438;
+    --t1-bg:#241f3a; --t2-bg:#0f2a24; --t3-bg:#2e2210; --t4-bg:#2e1812;
+    --danger-bg:#2e1612; --warn-bg:#2e2210; --ok-bg:#0f2a24;
+  }
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--paper);color:var(--ink);line-height:1.55;-webkit-font-smoothing:antialiased;font-size:14px}
+.app{max-width:1280px;margin:0 auto;padding:0 20px 60px}
+
+header.masthead{padding:28px 0 20px;border-bottom:1px solid var(--line)}
+.mast-eyebrow{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);font-weight:600;margin-bottom:8px}
+.mast-title{font-size:26px;font-weight:700;letter-spacing:-.02em;line-height:1.15}
+.mast-sub{font-size:14px;color:var(--ink-soft);margin-top:6px;max-width:680px}
+.mast-meta{display:flex;gap:18px;margin-top:16px;flex-wrap:wrap}
+.meta-chip{display:flex;flex-direction:column;gap:1px}
+.meta-chip .k{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-faint);font-weight:600}
+.meta-chip .v{font-size:13px;font-weight:600;color:var(--ink)}
+
+nav.tabs{position:sticky;top:0;z-index:20;background:var(--paper);display:flex;gap:2px;border-bottom:1px solid var(--line);margin-top:0;overflow-x:auto;padding-top:6px}
+nav.tabs button{flex:0 0 auto;background:none;border:none;font-family:var(--font);font-size:13px;font-weight:600;color:var(--ink-faint);padding:13px 16px;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:color .15s}
+nav.tabs button:hover{color:var(--ink-soft)}
+nav.tabs button.active{color:var(--accent);border-bottom-color:var(--accent)}
+
+.panel{display:none;padding-top:24px;animation:fade .25s ease}
+.panel.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+.section-head{margin-bottom:16px}
+.section-head h2{font-size:18px;font-weight:700;letter-spacing:-.01em}
+.section-head p{font-size:13px;color:var(--ink-soft);margin-top:3px;max-width:760px}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;margin-bottom:14px}
+.card.featured{border:1.5px solid var(--accent)}
+
+.strat-head{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.strat-letter{width:26px;height:26px;border-radius:7px;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex:0 0 auto}
+.strat-name{font-size:15px;font-weight:700;flex:1;min-width:180px}
+.pill{font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:var(--accent-soft);color:var(--accent)}
+
+.flow{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:12px 0}
+.mkt{font-size:12px;font-weight:600;padding:5px 11px;border-radius:var(--radius-sm);background:var(--paper);border:1px solid var(--line);white-space:nowrap}
+.mkt.t1{background:var(--t1-bg);color:var(--t1);border-color:transparent}
+.mkt.t2{background:var(--t2-bg);color:var(--t2);border-color:transparent}
+.mkt.t3{background:var(--t3-bg);color:var(--t3);border-color:transparent}
+.mkt.t4{background:var(--t4-bg);color:var(--t4);border-color:transparent}
+.flow .sep{color:var(--ink-faint);font-size:13px;font-weight:600}
+.flow .note{font-size:11px;color:var(--ink-faint);font-style:italic}
+
+.strat-body{font-size:13px;color:var(--ink-soft);line-height:1.6;margin:8px 0}
+.sw-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+@media(max-width:640px){.sw-grid{grid-template-columns:1fr}}
+.sw-cell{background:var(--paper);border-radius:var(--radius-sm);padding:10px 13px;border:1px solid var(--line-soft)}
+.sw-cell .lab{font-size:10px;text-transform:uppercase;letter-spacing:.06em;font-weight:700;margin-bottom:3px}
+.sw-cell.up .lab{color:var(--ok)}
+.sw-cell.down .lab{color:var(--danger)}
+.sw-cell .txt{font-size:12px;color:var(--ink);line-height:1.5}
+
+.scoregrid{display:flex;gap:14px;margin-top:12px;flex-wrap:wrap}
+.score{display:flex;flex-direction:column;gap:3px;min-width:96px}
+.score .sl{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-faint);font-weight:700}
+.score .bar{height:5px;border-radius:3px;background:var(--line);overflow:hidden}
+.score .bar i{display:block;height:100%;border-radius:3px}
+.score .sv{font-size:11px;color:var(--ink-soft);font-weight:600}
+
+.legend{display:flex;gap:14px;flex-wrap:wrap;padding:11px 14px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);margin-bottom:16px;font-size:12px;color:var(--ink-soft)}
+.legend .li{display:flex;align-items:center;gap:7px}
+.legend .dot{width:11px;height:11px;border-radius:3px}
+
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+table th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-faint);font-weight:700;padding:9px 12px;border-bottom:1px solid var(--line);background:var(--paper)}
+table td{padding:10px 12px;border-bottom:1px solid var(--line-soft);vertical-align:top}
+table tr:last-child td{border-bottom:none}
+table.tbl-wrap{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+.tbl-scroll{overflow-x:auto;border-radius:var(--radius)}
+.tag{display:inline-block;font-size:10.5px;font-weight:600;padding:2px 8px;border-radius:5px;white-space:nowrap}
+.tag.ok{background:var(--ok-bg);color:var(--ok)}
+.tag.warn{background:var(--warn-bg);color:var(--warn)}
+.tag.danger{background:var(--danger-bg);color:var(--danger)}
+.tag.neutral{background:var(--paper);color:var(--ink-soft);border:1px solid var(--line)}
+
+.metricrow{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px}
+.metric{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px}
+.metric .ml{font-size:11px;color:var(--ink-faint);font-weight:600;margin-bottom:5px}
+.metric .mv{font-size:23px;font-weight:700;letter-spacing:-.02em}
+.metric .ms{font-size:11px;color:var(--ink-soft);margin-top:2px}
+
+.callout{border-radius:var(--radius-sm);padding:12px 15px;margin:14px 0;font-size:12.5px;line-height:1.6;border-left:3px solid}
+.callout.danger{background:var(--danger-bg);border-color:var(--danger);color:var(--danger)}
+.callout.warn{background:var(--warn-bg);border-color:var(--warn);color:var(--warn)}
+.callout.info{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.callout strong{font-weight:700}
+
+.controls{display:flex;gap:14px;align-items:center;flex-wrap:wrap;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;margin-bottom:16px}
+.ctrl{display:flex;flex-direction:column;gap:5px;flex:1;min-width:140px}
+.ctrl label{font-size:11px;font-weight:600;color:var(--ink-soft)}
+.ctrl input[type=range]{width:100%;accent-color:var(--accent)}
+.ctrl .rv{font-size:12px;font-weight:700;color:var(--accent)}
+select,input[type=text]{font-family:var(--font);font-size:13px;padding:7px 10px;border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--surface);color:var(--ink);width:100%}
+
+.bar-chart{display:flex;flex-direction:column;gap:9px;margin-top:6px}
+.bar-row{display:grid;grid-template-columns:130px 1fr 70px;align-items:center;gap:10px}
+.bar-row .bl{font-size:12px;font-weight:600}
+.bar-track{height:22px;background:var(--paper);border-radius:5px;overflow:hidden;position:relative;border:1px solid var(--line-soft)}
+.bar-fill{height:100%;border-radius:5px;display:flex;align-items:center;padding-left:8px;font-size:10.5px;font-weight:700;color:#fff;white-space:nowrap}
+.bar-row .bv{font-size:12px;font-weight:700;text-align:right;font-family:var(--mono)}
+
+.waterfall{display:flex;align-items:flex-end;gap:3px;height:200px;margin:18px 0;padding:0 4px}
+.wf-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;min-width:0}
+.wf-bar{width:100%;border-radius:4px 4px 0 0;position:relative;transition:height .4s}
+.wf-label{font-size:9.5px;color:var(--ink-soft);text-align:center;margin-top:6px;font-weight:600;line-height:1.2;word-break:break-word}
+.wf-val{font-size:10px;font-weight:700;margin-bottom:3px;font-family:var(--mono)}
+
+.split2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:760px){.split2{grid-template-columns:1fr}}
+
+.matrix{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px}
+@media(max-width:640px){.matrix{grid-template-columns:repeat(2,1fr)}}
+.mx-cell{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-sm);padding:11px 12px}
+.mx-cell .mxh{font-size:12px;font-weight:700;margin-bottom:4px}
+.mx-cell .mxr{font-size:11px;color:var(--ink-soft);display:flex;justify-content:space-between;padding:2px 0}
+.mx-cell .mxr b{font-weight:700;color:var(--ink)}
+
+.note-foot{font-size:11px;color:var(--ink-faint);margin-top:8px;font-style:italic}
+.data-flag{font-size:10.5px;font-weight:600;color:var(--warn);background:var(--warn-bg);padding:2px 7px;border-radius:4px;display:inline-block;margin-left:6px}
+</style>
+</head>
+<body>
+<div class="app">
+<header class="masthead">
+  <div class="mast-eyebrow">Market Access Intelligence · Launch Excellence</div>
+  <div class="mast-title">Oncology launch sequencing dashboard</div>
+  <div class="mast-sub">Best-in-class, biomarker-selected immunotherapy. Multi-market launch planning across sequencing strategy, reimbursement, cost of treatment, gross-to-net, international reference pricing, and competitive landscape.</div>
+  <div class="mast-meta">
+    <div class="meta-chip"><span class="k">Asset profile</span><span class="v">Best-in-class IO</span></div>
+    <div class="meta-chip"><span class="k">Patient selection</span><span class="v">Biomarker-defined</span></div>
+    <div class="meta-chip"><span class="k">Markets in scope</span><span class="v">24 priority</span></div>
+    <div class="meta-chip"><span class="k">Data basis</span><span class="v">Illustrative model</span></div>
+  </div>
+</header>
+
+<nav class="tabs" id="tabnav">
+  <button class="active" data-tab="sequencing">Launch sequencing</button>
+  <button data-tab="reimbursement">Reimbursement launch</button>
+  <button data-tab="cot">Cost of treatment</button>
+  <button data-tab="gtn">Gross-to-net</button>
+  <button data-tab="irp">IRP exposure</button>
+  <button data-tab="competitor">Competitor</button>
+</nav>
+
+<!-- ============ SEQUENCING ============ -->
+<section class="panel active" id="panel-sequencing">
+  <div class="section-head">
+    <h2>Launch sequence strategies</h2>
+    <p>Five sequencing archetypes for a high-price, biomarker-selected immunotherapy. Each balances price protection, speed-to-patient, operational feasibility, and competitive positioning differently. Scores are illustrative and should be re-weighted to the specific asset.</p>
+  </div>
+  <div class="legend">
+    <div class="li"><span class="dot" style="background:var(--t1)"></span> Tier 1 — high price, low IRP exposure</div>
+    <div class="li"><span class="dot" style="background:var(--t2)"></span> Tier 2 — anchor reference markets</div>
+    <div class="li"><span class="dot" style="background:var(--t3)"></span> Tier 3 — high-volume, moderate price</div>
+    <div class="li"><span class="dot" style="background:var(--t4)"></span> Tier 4 — price-sensitive, IRP-referenced</div>
+  </div>
+  <div id="strategies"></div>
+</section>
+
+<!-- ============ REIMBURSEMENT ============ -->
+<section class="panel" id="panel-reimbursement">
+  <div class="section-head">
+    <h2>Reimbursement launch tracker</h2>
+    <p>HTA submission status, decision outcomes, and the critical gap between regulatory approval, HTA decision, and actual patient access. For a biomarker-selected IO, companion diagnostic reimbursement is a gating dependency.</p>
+  </div>
+  <div class="metricrow" id="reimb-metrics"></div>
+  <div class="tbl-scroll"><table class="tbl-wrap" id="reimb-table"></table></div>
+  <div class="callout warn"><strong>Access ≠ HTA decision ≠ approval.</strong> These three dates differ in every EU market. A positive HTA opinion does not mean patients can access the drug — formulary listing, regional budget allocation, and companion diagnostic reimbursement each add lag. Model all three milestones separately.</div>
+</section>
+
+<!-- ============ COT ============ -->
+<section class="panel" id="panel-cot">
+  <div class="section-head">
+    <h2>Cost of treatment</h2>
+    <p>Annual cost of therapy per patient by market, built from list price, dosing schema, and treatment duration. List-price based — net cost after rebates is shown in the gross-to-net tab.</p>
+  </div>
+  <div class="controls">
+    <div class="ctrl"><label>Treatment duration (months)</label><input type="range" id="cot-duration" min="3" max="24" value="12" step="1"><span class="rv" id="cot-duration-v">12 months</span></div>
+    <div class="ctrl"><label>Patient weight (kg) — for weight-based dosing</label><input type="range" id="cot-weight" min="50" max="100" value="75" step="5"><span class="rv" id="cot-weight-v">75 kg</span></div>
+  </div>
+  <div class="card">
+    <div class="strat-head"><div class="strat-name">Annual cost of treatment by market (USD)</div></div>
+    <div class="bar-chart" id="cot-chart"></div>
+    <div class="note-foot">Assumes flat dosing equivalent unless weight-based. Wastage not modelled. Figures illustrative.</div>
+  </div>
+  <div class="callout info"><strong>Why COT matters for sequencing:</strong> Markets where your COT sits far above the in-class incumbent will face the steepest HTA resistance. The COT delta versus the standard of care — not the absolute price — drives the budget impact argument in every HTA submission.</div>
+</section>
+
+<!-- ============ GTN ============ -->
+<section class="panel" id="panel-gtn">
+  <div class="section-head">
+    <h2>Gross-to-net waterfall</h2>
+    <p>The bridge from list price (WAC) to net realised price after all deductions. For high-price oncology, GTN erosion of 25–55% is typical. This is the price that actually triggers IRP and MFN mechanisms — not the list price.</p>
+  </div>
+  <div class="controls">
+    <div class="ctrl"><label>Market</label>
+      <select id="gtn-market">
+        <option value="us">United States</option>
+        <option value="de">Germany</option>
+        <option value="uk">United Kingdom</option>
+        <option value="fr">France</option>
+        <option value="it">Italy</option>
+      </select>
+    </div>
+  </div>
+  <div class="card">
+    <div class="strat-head"><div class="strat-name" id="gtn-title">Gross-to-net bridge</div></div>
+    <div class="waterfall" id="gtn-waterfall"></div>
+    <div class="split2" style="margin-top:14px">
+      <div class="metric"><div class="ml">List price (WAC) annual</div><div class="mv" id="gtn-gross">—</div></div>
+      <div class="metric"><div class="ml">Net realised annual</div><div class="mv" id="gtn-net" style="color:var(--ok)">—</div></div>
+    </div>
+  </div>
+  <div class="callout danger"><strong>This is the number that matters.</strong> Every MFN and IRP mechanism is triggered by net price, not list. A dashboard that only tracks WAC will systematically misstate your real exposure. Net price data requires internal contract data or a licensed feed — it cannot be derived from public sources.</div>
+</section>
+
+<!-- ============ IRP ============ -->
+<section class="panel" id="panel-irp">
+  <div class="section-head">
+    <h2>International reference pricing exposure</h2>
+    <p>Which markets reference which, how baskets are aggregated, and the cascade risk from a low-price launch. For a high-price IO, IRP exposure is the single largest threat to lifecycle price.</p>
+  </div>
+  <div class="metricrow" id="irp-metrics"></div>
+  <div class="split2">
+    <div class="card">
+      <div class="strat-head"><div class="strat-name">Reference basket by market</div></div>
+      <div id="irp-baskets"></div>
+    </div>
+    <div class="card">
+      <div class="strat-head"><div class="strat-name">Cascade simulation</div></div>
+      <div class="controls" style="margin-bottom:12px;border:none;padding:0;background:none">
+        <div class="ctrl"><label>Hypothetical price cut in a low-price market (%)</label><input type="range" id="irp-cut" min="0" max="40" value="15" step="5"><span class="rv" id="irp-cut-v">15%</span></div>
+      </div>
+      <div id="irp-cascade"></div>
+      <div class="note-foot">Simplified illustrative cascade. Real modelling requires the full referencing graph with aggregation rules and timing per country.</div>
+    </div>
+  </div>
+  <div class="callout warn"><strong>Launch sequencing implication:</strong> Launch high-price, low-exposure markets (US, Germany, Switzerland, Japan) first. Delay price-sensitive, heavily-referenced markets until anchor baskets have locked in. The order you launch in directly determines your global price floor.</div>
+</section>
+
+<!-- ============ COMPETITOR ============ -->
+<section class="panel" id="panel-competitor">
+  <div class="section-head">
+    <h2>Competitive landscape</h2>
+    <p>In-class incumbent and pipeline threats. For a best-in-class entrant, the strategic question is where competitive displacement is winnable versus where the incumbent has locked-in contract, formulary, and prescriber advantages.</p>
+  </div>
+  <div class="tbl-scroll"><table class="tbl-wrap" id="comp-table"></table></div>
+  <div class="section-head" style="margin-top:24px"><h2 style="font-size:15px">Displacement difficulty by market</h2></div>
+  <div class="card">
+    <div class="bar-chart" id="comp-displace"></div>
+    <div class="note-foot">Higher score = harder to displace the incumbent. Driven by incumbent's formulary entrenchment, confidential discount depth, and prescriber loyalty.</div>
+  </div>
+  <div class="callout info"><strong>Best-in-class counter-positioning:</strong> In markets where the incumbent is most entrenched (deep rebates, positive HTA already issued), launching second with a differentiated value story often beats racing head-on. Sequence competitive displacement where it is winnable first.</div>
+</section>
+
+</div>
+<script>
+// ============ DATA ============
+const STRATEGIES = [
+  {
+    letter:'A', name:'Price-protective sequential launch', featured:true, pill:'Most common for high-price IO',
+    flow:[['US','t1'],['→'],['Germany','t1'],['→'],['Switzerland','t1'],['→'],['UK, France, Italy','t2'],['→'],['Japan, Canada, Spain','t3'],['→'],['Eastern EU, LATAM, MENA','t4']],
+    body:'Launch first in markets with the highest sustainable price and lowest IRP cascade risk. Germany allows free pricing for the first 6 months under AMNOG, making it the highest-leverage early-launch market in Europe. Switzerland sits outside most IRP baskets. Delay price-sensitive markets until 18–24 months post-launch so reference baskets in tier 2/3 markets lock in higher prices first.',
+    up:'Maximises long-term price floor across the IRP network', down:'Delayed patient access in 30+ markets — reputational and ethical exposure',
+    scores:{'Price protection':92,'Speed to patient':45,'Operational ease':70,'Competitive defence':65}
+  },
+  {
+    letter:'B', name:'Big-bang global simultaneous launch', pill:null,
+    flow:[['US','t1'],['+'],['EU5','t1'],['+'],['Japan','t2'],['+'],['Canada, Australia','t2'],['(within 6 months)','note']],
+    body:'Launch in all major markets within a tight 6-month window. Maximises first-mover advantage and protects against a best-in-class competitor counter-launch. Requires massive parallel regulatory, supply, and commercial readiness. Best for products with strong head-to-head data where speed-to-market is the dominant value driver.',
+    up:'Captures peak revenue before competitor erosion or biosimilar entry', down:'Operational risk is enormous — supply, regulatory, and MA dossiers all parallelised',
+    scores:{'Price protection':50,'Speed to patient':95,'Operational ease':25,'Competitive defence':90}
+  },
+  {
+    letter:'C', name:'Indication-staggered launch', pill:null,
+    flow:[['Indication 1 globally','t1'],['→'],['Indication 2 in EU/US','t2'],['→'],['Indication 3 expansion','t3']],
+    body:'Launch one indication first across all priority markets, then expand to additional indications over 2–4 years. Common for immunotherapies where the lead indication has the strongest evidence, and subsequent indications follow as data matures. Enables indication-based pricing in markets that permit it (Germany, Italy, France).',
+    up:'Maximises evidence quality per indication; supports indication-based pricing', down:'Off-label use in non-launched indications can erode commercial control',
+    scores:{'Price protection':75,'Speed to patient':60,'Operational ease':65,'Competitive defence':55}
+  },
+  {
+    letter:'D', name:'Wave-based regional clustering', pill:null,
+    flow:[['Wave 1: US, DE, CH','t1'],['→'],['Wave 2: UK, FR, IT, ES','t2'],['→'],['Wave 3: APAC, LATAM','t3'],['→'],['Wave 4: Emerging','t4']],
+    body:'A hybrid between sequential and big-bang. Groups markets into waves by similar HTA cycles, reference baskets, and operational complexity. Each wave launches in tight succession (3–6 months apart), allowing organisational learning between waves. The most pragmatic option for mid-sized pharma with limited bandwidth.',
+    up:'Balances IRP protection with operational feasibility', down:'Cross-wave IRP referencing can still erode price if waves are too close together',
+    scores:{'Price protection':78,'Speed to patient':68,'Operational ease':80,'Competitive defence':70}
+  },
+  {
+    letter:'E', name:'Access-first sequential launch', pill:null,
+    flow:[['Rapid-HTA markets','t2'],['→'],['Standard markets','t3'],['→'],['Restrictive markets','t4']],
+    body:'Prioritise markets that grant fastest patient access regardless of price ceiling. Useful when the asset has compassionate-use momentum, breakthrough designation, or strong patient advocacy. Leverages UK NICE fast-track, Germany AMNOG day-1 access, and France early access (AAP). Recommended for rare-cancer IO where unmet need is the dominant narrative.',
+    up:'Strongest reputational positioning; aligns with patient advocacy', down:'Can lock in low reference prices that then cascade across the IRP network',
+    scores:{'Price protection':40,'Speed to patient':90,'Operational ease':60,'Competitive defence':50}
+  }
+];
+
+const TIER_COLORS={t1:'#5b4bc4',t2:'#0f8a6b',t3:'#b97316',t4:'#c8492a'};
+
+const REIMB=[
+  {m:'United States',approval:'Approved',hta:'N/A (no central HTA)',access:'Day 1 (commercial)',cdx:'Established',status:'ok'},
+  {m:'Germany',approval:'Approved',hta:'G-BA assessment ongoing',access:'Day 1 (free pricing 6mo)',cdx:'Established',status:'ok'},
+  {m:'United Kingdom',approval:'Approved',hta:'NICE TA in progress',access:'Pending NICE',cdx:'NHS-funded',status:'warn'},
+  {m:'France',approval:'Approved',hta:'HAS — ASMR pending',access:'Early access (AAP)',cdx:'Reimbursed',status:'ok'},
+  {m:'Italy',approval:'Approved',hta:'AIFA negotiation',access:'Pending P&R',cdx:'Regional variation',status:'warn'},
+  {m:'Spain',approval:'Approved',hta:'Not yet submitted',access:'Not available',cdx:'Limited',status:'danger'},
+  {m:'Japan',approval:'Under review',hta:'Chuikyo pending',access:'Not available',cdx:'Established',status:'danger'},
+  {m:'Canada',approval:'Approved',hta:'CDA-AMC review',access:'pCPA negotiation',cdx:'Province-dependent',status:'warn'},
+  {m:'Poland',approval:'Approved',hta:'AOTMiT — not submitted',access:'Not available',cdx:'Not reimbursed',status:'danger'}
+];
+
+const COT=[
+  {m:'United States',base:285000,weight:false},
+  {m:'Germany',base:198000,weight:false},
+  {m:'Switzerland',base:212000,weight:false},
+  {m:'United Kingdom',base:165000,weight:false},
+  {m:'France',base:172000,weight:false},
+  {m:'Italy',base:158000,weight:false},
+  {m:'Japan',base:188000,weight:false},
+  {m:'Spain',base:149000,weight:false}
+];
+
+const GTN={
+  us:{gross:285000,steps:[['List (WAC)',285000,'gross'],['Statutory/340B',-22000,'cut'],['Commercial rebates',-68000,'cut'],['PBM fees',-31000,'cut'],['Patient assistance',-18000,'cut'],['Net realised',146000,'net']]},
+  de:{gross:198000,steps:[['List price',198000,'gross'],['AMNOG rebate',-26000,'cut'],['Statutory 7%',-13900,'cut'],['Confidential MEA',-30000,'cut'],['Net realised',128100,'net']]},
+  uk:{gross:165000,steps:[['List price',165000,'gross'],['PAS discount',-49500,'cut'],['VPAG clawback',-14800,'cut'],['Net realised',100700,'net']]},
+  fr:{gross:172000,steps:[['List price',172000,'gross'],['CEPS rebate',-34000,'cut'],['Remise confidential',-25000,'cut'],['Net realised',113000,'net']]},
+  it:{gross:158000,steps:[['List price',158000,'gross'],['AIFA payback',-22000,'cut'],['MEA discount',-28000,'cut'],['Regional',-9000,'cut'],['Net realised',99000,'net']]}
+};
+
+const IRP_BASKETS=[
+  {m:'Spain',refs:'IT, FR, DE, PT, EL +4',rule:'Average',risk:'high'},
+  {m:'Italy',refs:'EU average basket',rule:'Average',risk:'med'},
+  {m:'Poland',refs:'EU lowest 3',rule:'Lowest',risk:'high'},
+  {m:'Greece',refs:'Lowest 3 in EU27',rule:'Lowest',risk:'high'},
+  {m:'Japan',refs:'US, UK, DE, FR',rule:'Average (FX adj)',risk:'med'},
+  {m:'Canada',refs:'PMPRB11 basket',rule:'Median',risk:'med'},
+  {m:'Switzerland',refs:'DE, FR, UK, AT +5',rule:'Average',risk:'low'},
+  {m:'Germany',refs:'Not IRP (free price)',rule:'—',risk:'low'}
+];
+
+const COMPETITOR=[
+  {prod:'Incumbent IO (in-class)',co:'Pharma Co A',stage:'Marketed',ind:'2L NSCLC, 1L melanoma',price:'$245k WAC',pos:'Entrenched — deep rebates',threat:'high'},
+  {prod:'Our asset (best-in-class)',co:'This company',stage:'Launching',ind:'Biomarker+ NSCLC',price:'$285k WAC',pos:'Superior PFS/OS data',threat:'self'},
+  {prod:'Pipeline bispecific',co:'Pharma Co B',stage:'Phase III',ind:'2L NSCLC',price:'TBD',pos:'18–24 months behind',threat:'med'},
+  {prod:'Biosimilar (incumbent)',co:'Generic Co',stage:'Phase III',ind:'Same as incumbent',price:'~40% discount',threat:'med',pos:'Threatens incumbent, not us'},
+  {prod:'Next-gen CAR-T',co:'Pharma Co C',stage:'Phase II',ind:'Hematologic only',price:'TBD',pos:'Different tumour type',threat:'low'}
+];
+
+const DISPLACE=[
+  {m:'United States',score:55},{m:'Germany',score:45},{m:'United Kingdom',score:78},
+  {m:'France',score:62},{m:'Italy',score:70},{m:'Japan',score:58},{m:'Spain',score:65}
+];
+
+// ============ RENDER ============
+const fmt=n=>'$'+Math.round(n).toLocaleString();
+const fmtK=n=>'$'+Math.round(n/1000)+'k';
+
+function renderStrategies(){
+  const c=document.getElementById('strategies');
+  c.innerHTML=STRATEGIES.map(s=>`
+    <div class="card ${s.featured?'featured':''}">
+      <div class="strat-head">
+        <div class="strat-letter">${s.letter}</div>
+        <div class="strat-name">${s.name}</div>
+        ${s.pill?`<span class="pill">${s.pill}</span>`:''}
+      </div>
+      <div class="flow">
+        ${s.flow.map(f=>{
+          if(f[1]==='note')return `<span class="note">${f[0]}</span>`;
+          if(f.length===1)return `<span class="sep">${f[0]}</span>`;
+          return `<span class="mkt ${f[1]}">${f[0]}</span>`;
+        }).join('')}
+      </div>
+      <div class="strat-body">${s.body}</div>
+      <div class="sw-grid">
+        <div class="sw-cell up"><div class="lab">Strength</div><div class="txt">${s.up}</div></div>
+        <div class="sw-cell down"><div class="lab">Weakness</div><div class="txt">${s.down}</div></div>
+      </div>
+      <div class="scoregrid">
+        ${Object.entries(s.scores).map(([k,v])=>{
+          const col=v>=75?'var(--ok)':v>=50?'var(--warn)':'var(--danger)';
+          return `<div class="score"><span class="sl">${k}</span><div class="bar"><i style="width:${v}%;background:${col}"></i></div><span class="sv">${v}/100</span></div>`;
+        }).join('')}
+      </div>
+    </div>`).join('');
+}
+
+function renderReimb(){
+  const ok=REIMB.filter(r=>r.status==='ok').length;
+  const pending=REIMB.filter(r=>r.status==='warn').length;
+  const blocked=REIMB.filter(r=>r.status==='danger').length;
+  document.getElementById('reimb-metrics').innerHTML=`
+    <div class="metric"><div class="ml">Markets with access</div><div class="mv" style="color:var(--ok)">${ok}</div><div class="ms">Day-1 or early access live</div></div>
+    <div class="metric"><div class="ml">In negotiation</div><div class="mv" style="color:var(--warn)">${pending}</div><div class="ms">HTA / P&R pending</div></div>
+    <div class="metric"><div class="ml">Not yet available</div><div class="mv" style="color:var(--danger)">${blocked}</div><div class="ms">No submission or blocked</div></div>
+    <div class="metric"><div class="ml">CDx dependency</div><div class="mv">9/9</div><div class="ms">All require biomarker test</div></div>`;
+  document.getElementById('reimb-table').innerHTML=`
+    <thead><tr><th>Market</th><th>Regulatory</th><th>HTA status</th><th>Patient access</th><th>Companion Dx</th></tr></thead>
+    <tbody>${REIMB.map(r=>`<tr>
+      <td><b>${r.m}</b></td>
+      <td>${r.approval}</td>
+      <td>${r.hta}</td>
+      <td><span class="tag ${r.status}">${r.access}</span></td>
+      <td>${r.cdx}</td>
+    </tr>`).join('')}</tbody>`;
+}
+
+function renderCOT(){
+  const dur=+document.getElementById('cot-duration').value;
+  const factor=dur/12;
+  const max=Math.max(...COT.map(c=>c.base))*factor;
+  document.getElementById('cot-chart').innerHTML=COT.map(c=>{
+    const val=c.base*factor;
+    const pct=(val/max)*100;
+    return `<div class="bar-row">
+      <span class="bl">${c.m}</span>
+      <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${c.m==='United States'?'var(--t4)':'var(--accent)'}">${fmtK(val)}</div></div>
+      <span class="bv">${fmtK(val)}</span>
+    </div>`;
+  }).join('');
+}
+
+function renderGTN(){
+  const mk=document.getElementById('gtn-market').value;
+  const d=GTN[mk];
+  const name=document.getElementById('gtn-market').selectedOptions[0].text;
+  document.getElementById('gtn-title').textContent=`Gross-to-net bridge — ${name}`;
+  const max=d.gross;
+  let running=0;
+  document.getElementById('gtn-waterfall').innerHTML=d.steps.map(st=>{
+    const[label,val,type]=st;
+    let h,color,disp,top;
+    if(type==='gross'){h=(val/max)*100;color='var(--ink-soft)';disp=fmtK(val);running=val;top=val;}
+    else if(type==='net'){h=(val/max)*100;color='var(--ok)';disp=fmtK(val);top=val;}
+    else{h=(Math.abs(val)/max)*100;color='var(--danger)';disp=fmtK(val);running+=val;top=running-val;}
+    return `<div class="wf-col">
+      <span class="wf-val">${disp}</span>
+      <div class="wf-bar" style="height:${Math.max(h,2)}%;background:${color}"></div>
+      <span class="wf-label">${label}</span>
+    </div>`;
+  }).join('');
+  document.getElementById('gtn-gross').textContent=fmt(d.gross);
+  const net=d.steps.find(s=>s[2]==='net')[1];
+  document.getElementById('gtn-net').textContent=fmt(net);
+}
+
+function renderIRP(){
+  const high=IRP_BASKETS.filter(b=>b.risk==='high').length;
+  document.getElementById('irp-metrics').innerHTML=`
+    <div class="metric"><div class="ml">Markets in scope</div><div class="mv">${IRP_BASKETS.length}</div><div class="ms">With IRP referencing rules</div></div>
+    <div class="metric"><div class="ml">High cascade risk</div><div class="mv" style="color:var(--danger)">${high}</div><div class="ms">Lowest-price or wide basket</div></div>
+    <div class="metric"><div class="ml">Free-price markets</div><div class="mv" style="color:var(--ok)">2</div><div class="ms">DE, US — anchor launch here</div></div>
+    <div class="metric"><div class="ml">Avg basket size</div><div class="mv">~8</div><div class="ms">Reference countries per market</div></div>`;
+  document.getElementById('irp-baskets').innerHTML=`
+    <div class="tbl-scroll"><table>
+    <thead><tr><th>Market</th><th>References</th><th>Rule</th><th>Risk</th></tr></thead>
+    <tbody>${IRP_BASKETS.map(b=>`<tr>
+      <td><b>${b.m}</b></td><td style="font-size:11.5px">${b.refs}</td><td>${b.rule}</td>
+      <td><span class="tag ${b.risk==='high'?'danger':b.risk==='med'?'warn':'ok'}">${b.risk}</span></td>
+    </tr>`).join('')}</tbody></table></div>`;
+  renderCascade();
+}
+
+function renderCascade(){
+  const cut=+document.getElementById('irp-cut').value;
+  const affected=[
+    {m:'Spain',impact:cut*0.7},
+    {m:'Italy',impact:cut*0.5},
+    {m:'Portugal',impact:cut*0.65},
+    {m:'Greece',impact:cut*0.85},
+    {m:'Poland',impact:cut*0.8},
+    {m:'Japan (via EU avg)',impact:cut*0.25}
+  ];
+  const max=Math.max(...affected.map(a=>a.impact),1);
+  document.getElementById('irp-cascade').innerHTML=`
+    <div style="font-size:12px;color:var(--ink-soft);margin-bottom:10px">A ${cut}% cut in one low-price market propagates to:</div>
+    <div class="bar-chart">${affected.map(a=>`
+      <div class="bar-row">
+        <span class="bl">${a.m}</span>
+        <div class="bar-track"><div class="bar-fill" style="width:${(a.impact/max)*100}%;background:var(--t4)">${a.impact.toFixed(1)}%</div></div>
+        <span class="bv">-${a.impact.toFixed(1)}%</span>
+      </div>`).join('')}</div>`;
+}
+
+function renderCompetitor(){
+  document.getElementById('comp-table').innerHTML=`
+    <thead><tr><th>Product</th><th>Company</th><th>Stage</th><th>Indication</th><th>Price</th><th>Position</th></tr></thead>
+    <tbody>${COMPETITOR.map(c=>{
+      const tag=c.threat==='high'?'danger':c.threat==='med'?'warn':c.threat==='self'?'ok':'neutral';
+      const lab=c.threat==='self'?'Our asset':c.threat+' threat';
+      return `<tr style="${c.threat==='self'?'background:var(--accent-soft)':''}">
+        <td><b>${c.prod}</b></td><td>${c.co}</td>
+        <td><span class="tag ${tag}">${c.stage}</span></td>
+        <td style="font-size:11.5px">${c.ind}</td><td>${c.price}</td>
+        <td style="font-size:11.5px;color:var(--ink-soft)">${c.pos}</td>
+      </tr>`;
+    }).join('')}</tbody>`;
+  const max=Math.max(...DISPLACE.map(d=>d.score));
+  document.getElementById('comp-displace').innerHTML=DISPLACE.map(d=>{
+    const col=d.score>=70?'var(--danger)':d.score>=55?'var(--warn)':'var(--ok)';
+    return `<div class="bar-row">
+      <span class="bl">${d.m}</span>
+      <div class="bar-track"><div class="bar-fill" style="width:${(d.score/max)*100}%;background:${col}">${d.score}</div></div>
+      <span class="bv">${d.score}/100</span>
+    </div>`;
+  }).join('');
+}
+
+// ============ TABS ============
+document.getElementById('tabnav').addEventListener('click',e=>{
+  const btn=e.target.closest('button');
+  if(!btn)return;
+  document.querySelectorAll('#tabnav button').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('panel-'+btn.dataset.tab).classList.add('active');
+});
+
+// ============ CONTROLS ============
+document.getElementById('cot-duration').addEventListener('input',e=>{
+  document.getElementById('cot-duration-v').textContent=e.target.value+' months';renderCOT();
+});
+document.getElementById('cot-weight').addEventListener('input',e=>{
+  document.getElementById('cot-weight-v').textContent=e.target.value+' kg';renderCOT();
+});
+document.getElementById('gtn-market').addEventListener('change',renderGTN);
+document.getElementById('irp-cut').addEventListener('input',e=>{
+  document.getElementById('irp-cut-v').textContent=e.target.value+'%';renderCascade();
+});
+
+// ============ INIT ============
+renderStrategies();renderReimb();renderCOT();renderGTN();renderIRP();renderCompetitor();
+
+</script>
+</body>
+</html>
